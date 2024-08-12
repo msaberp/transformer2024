@@ -1,8 +1,3 @@
-"""
-@author : Hyunwoong
-@when : 2019-10-22
-@homepage : https://github.com/gusdnd852
-"""
 import math
 import time
 
@@ -21,7 +16,7 @@ def count_parameters(model):
 
 def initialize_weights(m):
     if hasattr(m, 'weight') and m.weight.dim() > 1:
-        nn.init.kaiming_uniform(m.weight.data)
+        nn.init.kaiming_uniform_(m.weight.data)
 
 
 model = Transformer(src_pad_idx=src_pad_idx,
@@ -52,12 +47,12 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
 criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 
 
-def train(model, iterator, optimizer, criterion, clip):
+def train_data(model, iterator, optimizer, criterion, clip):
     model.train()
     epoch_loss = 0
     for i, batch in enumerate(iterator):
-        src = batch.src
-        trg = batch.trg
+        src = batch[0]
+        trg = batch[1]
 
         optimizer.zero_grad()
         output = model(src, trg[:, :-1])
@@ -112,7 +107,7 @@ def run(total_epoch, best_loss):
     train_losses, test_losses, bleus = [], [], []
     for step in range(total_epoch):
         start_time = time.time()
-        train_loss = train(model, train_iter, optimizer, criterion, clip)
+        train_loss = train_data(model, train_iter, optimizer, criterion, clip)
         valid_loss, bleu = evaluate(model, valid_iter, criterion)
         end_time = time.time()
 
