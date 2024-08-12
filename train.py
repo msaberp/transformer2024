@@ -72,7 +72,6 @@ def train_data(model, iterator, optimizer, criterion, clip):
         logger.info(
             f"step: {round((i / len(iterator)) * 100, 2)} , loss: {loss.item()}"
         )
-        break
 
     return epoch_loss / len(iterator)
 
@@ -107,7 +106,6 @@ def evaluate(model, iterator, criterion):
 
             total_bleu = sum(total_bleu) / len(total_bleu)
             batch_bleu.append(total_bleu)
-            break
 
     batch_bleu = sum(batch_bleu) / len(batch_bleu)
     return epoch_loss / len(iterator), batch_bleu
