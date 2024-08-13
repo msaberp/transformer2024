@@ -7,3 +7,5 @@ __pycache__
 result/
 .idea/
 .vscode/
+.hydra/
+outputs/
