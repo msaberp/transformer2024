@@ -1,0 +1,42 @@
+# Ignore Python bytecode and cache files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Ignore output files and results
+outputs/
+result/
+
+# Ignore saved model files
+saved/
+
+# Ignore images and other large assets
+image/
+
+# Ignore the paper PDF file
+paper/
+
+# Ignore readme and markdown files
+*.md
+
+# Ignore any virtual environment directories (if applicable)
+venv/
+.env/
+*.env
+
+# Ignore editor and IDE configuration files
+.vscode/
+.idea/
+
+# Ignore miscellaneous files and directories
+*.bak
+*.tmp
+*.swp
+*.swo
+
+# Ignore build artifacts
+*.o
+*.so
+*.a
+*.out
+*.dSYM/
