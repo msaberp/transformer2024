@@ -1,6 +1,6 @@
 torch==2.2.2
 torchtext==0.17.2
-torchdata==0.6.0
+torchdata==0.7.1
 numpy==1.26.4
 spacy==3.7.5
 portalocker==2.10.1
