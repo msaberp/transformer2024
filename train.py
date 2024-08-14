@@ -124,6 +124,13 @@ def run(cfg: DictConfig):
 
     criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 
+    if not os.path.exists("result"):
+        logger.info("Creating result directory...")
+        os.makedirs("result")
+    if not os.path.exists("saved"):
+        logger.info("Creating saved directory...")
+        os.makedirs("saved")
+
     train_losses, test_losses, bleus = [], [], []
     for step in range(cfg.runner.epoch):
         start_time = time.time()
@@ -142,10 +149,6 @@ def run(cfg: DictConfig):
         if valid_loss < best_loss:
             best_loss = valid_loss
             torch.save(model.state_dict(), "saved/model-{0}.pt".format(valid_loss))
-
-        if not os.path.exists("result"):
-            logger.info("Creating result directory...")
-            os.makedirs("result")
 
         f = open("result/train_loss.txt", "w")
         f.write(str(train_losses))
