@@ -1,11 +1,7 @@
-"""
-@author : Hyunwoong
-@when : 2019-10-22
-@homepage : https://github.com/gusdnd852
-"""
+from typing import Optional
 import math
-
 from torch import nn
+from torch import Tensor, BoolTensor
 
 
 class ScaleDotProductAttention(nn.Module):
@@ -13,7 +9,7 @@ class ScaleDotProductAttention(nn.Module):
     compute scale dot product attention
 
     Query : given sentence that we focused on (decoder)
-    Key : every sentence to check relationship with Qeury(encoder)
+    Key : every sentence to check relationship with Qeury (encoder)
     Value : every sentence same with Key (encoder)
     """
 
@@ -21,23 +17,39 @@ class ScaleDotProductAttention(nn.Module):
         super(ScaleDotProductAttention, self).__init__()
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, q, k, v, mask=None, e=1e-12):
-        # input is 4 dimension tensor
-        # [batch_size, head, length, d_tensor]
-        batch_size, head, length, d_tensor = k.size()
+    def forward(
+        self,
+        query: Tensor,
+        key: Tensor,
+        value: Tensor,
+        mask: Optional[BoolTensor] = None,
+    ) -> tuple[Tensor, Tensor]:
+        """
+        Forward pass of the Scale Dot-Product Attention mechanism.
 
-        # 1. dot product Query with Key^T to compute similarity
-        k_t = k.transpose(2, 3)  # transpose
-        score = (q @ k_t) / math.sqrt(d_tensor)  # scaled dot product
+        Args:
+            query (torch.Tensor): Query tensor of shape [batch_size, head, length_query, d_tensor].
+            key (torch.Tensor): Key tensor of shape [batch_size, head, length_key, d_tensor].
+            value (torch.Tensor): Value tensor of shape [batch_size, head, length_key, d_tensor].
+            mask (torch.BoolTensor, optional): Mask tensor indicating which elements to mask out.
+                If provided, should be of shape [batch_size, 1, length_query, length_key].
 
-        # 2. apply masking (opt)
+        Returns:
+            torch.Tensor, torch.Tensor:
+            - Computed attention-weighted values tensor of shape [batch_size, head, length_query, d_tensor].
+            - Attention scores tensor of shape [batch_size, head, length_query, length_key].
+        """
+        # input dimentions: [batch_size, head, length, d_tensor]
+        d_tensor = key.size()[-1]
+
+        key_transpose = key.transpose(2, 3)
+        scaling_factor = 1 / math.sqrt(d_tensor)
+        scaled_dot_product = (query @ key_transpose) * scaling_factor
+
         if mask is not None:
-            score = score.masked_fill(mask == 0, -10000)
+            scaled_dot_product = scaled_dot_product.masked_fill(mask == 0, -10000)
 
-        # 3. pass them softmax to make [0, 1] range
-        score = self.softmax(score)
+        score = self.softmax(scaled_dot_product)
+        value = score @ value
 
-        # 4. multiply with Value
-        v = score @ v
-
-        return v, score
+        return value, score
