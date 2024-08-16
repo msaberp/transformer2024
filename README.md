@@ -254,7 +254,7 @@ class EncoderLayer(nn.Module):
 ```python
 class Encoder(nn.Module):
 
-    def __init__(self, enc_voc_size, max_len, d_model, ffn_hidden, n_head, n_layers, drop_prob, device):
+    def __init__(self, enc_voc_size, max_len, d_model, ffn_hidden, n_head, num_layers, drop_prob, device):
         super().__init__()
         self.emb = TransformerEmbedding(d_model=d_model,
                                         max_len=max_len,
@@ -266,7 +266,7 @@ class Encoder(nn.Module):
                                                   ffn_hidden=ffn_hidden,
                                                   n_head=n_head,
                                                   drop_prob=drop_prob)
-                                     for _ in range(n_layers)])
+                                     for _ in range(num_layers)])
 
     def forward(self, x, src_mask):
         x = self.emb(x)
@@ -326,7 +326,7 @@ class DecoderLayer(nn.Module):
 
 ```python        
 class Decoder(nn.Module):
-    def __init__(self, dec_voc_size, max_len, d_model, ffn_hidden, n_head, n_layers, drop_prob, device):
+    def __init__(self, dec_voc_size, max_len, d_model, ffn_hidden, n_head, num_layers, drop_prob, device):
         super().__init__()
         self.emb = TransformerEmbedding(d_model=d_model,
                                         drop_prob=drop_prob,
@@ -338,7 +338,7 @@ class Decoder(nn.Module):
                                                   ffn_hidden=ffn_hidden,
                                                   n_head=n_head,
                                                   drop_prob=drop_prob)
-                                     for _ in range(n_layers)])
+                                     for _ in range(num_layers)])
 
         self.linear = nn.Linear(d_model, dec_voc_size)
 
@@ -372,7 +372,7 @@ I follow original paper's parameter settings. (below) <br>
 * batch_size = 128
 * max_len = 256
 * d_model = 512
-* n_layers = 6
+* num_layers = 6
 * n_heads = 8
 * ffn_hidden = 2048
 * drop_prob = 0.1

@@ -101,7 +101,7 @@ def run(cfg: DictConfig):
         max_len=cfg.model.max_len,
         ffn_hidden=cfg.model.ffn_hidden,
         n_head=cfg.model.n_head,
-        n_layers=cfg.model.n_layers,
+        num_layers=cfg.model.num_layers,
         drop_prob=cfg.model.drop_prob,
         device=torch.device(cfg.runner.device),
     ).to(torch.device(cfg.runner.device))
