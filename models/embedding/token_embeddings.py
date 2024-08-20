@@ -1,8 +1,3 @@
-"""
-@author : Hyunwoong
-@when : 2019-10-24
-@homepage : https://github.com/gusdnd852
-"""
 from torch import nn
 
 
@@ -12,11 +7,15 @@ class TokenEmbedding(nn.Embedding):
     they will dense representation of word using weighted matrix
     """
 
-    def __init__(self, vocab_size, d_model):
+    def __init__(self, vocab_size: int, d_model: int):
         """
-        class for token embedding that included positional information
+        Initializes the TokenEmbedding module.
 
-        :param vocab_size: size of vocabulary
-        :param d_model: dimensions of model
+        Args:
+            vocab_size (int): The size of the vocabulary.
+            d_model (int): The dimensionality of the model.
+
+        Returns:
+            None
         """
         super(TokenEmbedding, self).__init__(vocab_size, d_model, padding_idx=1)

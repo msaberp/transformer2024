@@ -100,7 +100,7 @@ def run(cfg: DictConfig):
         dec_voc_size=dec_voc_size,
         max_len=cfg.model.max_len,
         ffn_hidden=cfg.model.ffn_hidden,
-        n_head=cfg.model.n_head,
+        num_head=cfg.model.num_head,
         num_layers=cfg.model.num_layers,
         drop_prob=cfg.model.drop_prob,
         device=torch.device(cfg.runner.device),
