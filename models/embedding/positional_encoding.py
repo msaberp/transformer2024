@@ -1,50 +1,50 @@
-"""
-@author : Hyunwoong
-@when : 2019-10-22
-@homepage : https://github.com/gusdnd852
-"""
 import torch
 from torch import nn
 
 
 class PositionalEncoding(nn.Module):
     """
-    compute sinusoid encoding.
+    Computes sinusoidal positional encodings.
     """
 
-    def __init__(self, d_model, max_len, device):
+    def __init__(self, d_model: int, max_len: int, device: torch.device):
         """
-        constructor of sinusoid encoding class
+        Initializes the PositionalEncoding module.
 
-        :param d_model: dimension of model
-        :param max_len: max sequence length
-        :param device: hardware device setting
+        Args:
+            d_model (int): The dimensionality of the model.
+            max_len (int): The maximum length of the input sequence.
+            device (torch.device): The device to use for computations.
         """
         super(PositionalEncoding, self).__init__()
 
-        # same size with input matrix (for adding with input matrix)
-        self.encoding = torch.zeros(max_len, d_model, device=device)
-        self.encoding.requires_grad = False  # we don't need to compute gradient
+        # Create the positional encodings matrix
+        encoding = torch.zeros(max_len, d_model, device=device)
+        positions = torch.arange(
+            0, max_len, dtype=torch.float, device=device
+        ).unsqueeze(1)
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2, dtype=torch.float, device=device)
+            * -(torch.log(torch.tensor(10000.0)) / d_model)
+        )
 
-        pos = torch.arange(0, max_len, device=device)
-        pos = pos.float().unsqueeze(dim=1)
-        # 1D => 2D unsqueeze to represent word's position
+        encoding[:, 0::2] = torch.sin(positions * div_term)
+        encoding[:, 1::2] = torch.cos(positions * div_term)
 
-        _2i = torch.arange(0, d_model, step=2, device=device).float()
-        # 'i' means index of d_model (e.g. embedding size = 50, 'i' = [0,50])
-        # "step=2" means 'i' multiplied with two (same with 2 * i)
+        # Register the buffer so it's not a learnable parameter but still part of the model state
+        self.register_buffer("encoding", encoding)
 
-        self.encoding[:, 0::2] = torch.sin(pos / (10000 ** (_2i / d_model)))
-        self.encoding[:, 1::2] = torch.cos(pos / (10000 ** (_2i / d_model)))
-        # compute positional encoding to consider positional information of words
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply positional encoding to the input tensor `x`.
 
-    def forward(self, x):
-        # self.encoding
-        # [max_len = 512, d_model = 512]
+        Args:
+            x (torch.Tensor): The input tensor of shape (batch_size, seq_len, d_model).
 
-        batch_size, seq_len = x.size()
-        # [batch_size = 128, seq_len = 30]
-
+        Returns:
+            torch.Tensor: The tensor with positional encoding added,
+            of shape (batch_size, seq_len, d_model).
+        """
+        seq_len = x.size(1)
+        # Add positional encoding to the input embeddings
         return self.encoding[:seq_len, :]
-        # [seq_len = 30, d_model = 512]
-        # it will add with tok_emb : [128, 30, 512]

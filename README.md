@@ -67,9 +67,9 @@ class PositionalEncoding(nn.Module):
 ```python
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, d_model, n_head):
+    def __init__(self, d_model, num_head):
         super(MultiHeadAttention, self).__init__()
-        self.n_head = n_head
+        self.num_head = num_head
         self.attention = ScaleDotProductAttention()
         self.w_q = nn.Linear(d_model, d_model)
         self.w_k = nn.Linear(d_model, d_model)
@@ -104,8 +104,8 @@ class MultiHeadAttention(nn.Module):
         """
         batch_size, length, d_model = tensor.size()
 
-        d_tensor = d_model // self.n_head
-        tensor = tensor.view(batch_size, length, self.n_head, d_tensor).transpose(1, 2)
+        d_tensor = d_model // self.num_head
+        tensor = tensor.view(batch_size, length, self.num_head, d_tensor).transpose(1, 2)
         # it is similar with group convolution (split by number of heads)
 
         return tensor
@@ -221,9 +221,9 @@ class PositionwiseFeedForward(nn.Module):
 ```python
 class EncoderLayer(nn.Module):
 
-    def __init__(self, d_model, ffn_hidden, n_head, drop_prob):
+    def __init__(self, d_model, ffn_hidden, num_head, drop_prob):
         super(EncoderLayer, self).__init__()
-        self.attention = MultiHeadAttention(d_model=d_model, n_head=n_head)
+        self.attention = MultiHeadAttention(d_model=d_model, num_head=num_head)
         self.norm1 = LayerNorm(d_model=d_model)
         self.dropout1 = nn.Dropout(p=drop_prob)
 
@@ -254,7 +254,7 @@ class EncoderLayer(nn.Module):
 ```python
 class Encoder(nn.Module):
 
-    def __init__(self, enc_voc_size, max_len, d_model, ffn_hidden, n_head, n_layers, drop_prob, device):
+    def __init__(self, enc_voc_size, max_len, d_model, ffn_hidden, num_head, num_layers, drop_prob, device):
         super().__init__()
         self.emb = TransformerEmbedding(d_model=d_model,
                                         max_len=max_len,
@@ -264,9 +264,9 @@ class Encoder(nn.Module):
 
         self.layers = nn.ModuleList([EncoderLayer(d_model=d_model,
                                                   ffn_hidden=ffn_hidden,
-                                                  n_head=n_head,
+                                                  num_head=num_head,
                                                   drop_prob=drop_prob)
-                                     for _ in range(n_layers)])
+                                     for _ in range(num_layers)])
 
     def forward(self, x, src_mask):
         x = self.emb(x)
@@ -281,13 +281,13 @@ class Encoder(nn.Module):
 ```python
 class DecoderLayer(nn.Module):
 
-    def __init__(self, d_model, ffn_hidden, n_head, drop_prob):
+    def __init__(self, d_model, ffn_hidden, num_head, drop_prob):
         super(DecoderLayer, self).__init__()
-        self.self_attention = MultiHeadAttention(d_model=d_model, n_head=n_head)
+        self.self_attention = MultiHeadAttention(d_model=d_model, num_head=num_head)
         self.norm1 = LayerNorm(d_model=d_model)
         self.dropout1 = nn.Dropout(p=drop_prob)
 
-        self.enc_dec_attention = MultiHeadAttention(d_model=d_model, n_head=n_head)
+        self.enc_dec_attention = MultiHeadAttention(d_model=d_model, num_head=num_head)
         self.norm2 = LayerNorm(d_model=d_model)
         self.dropout2 = nn.Dropout(p=drop_prob)
 
@@ -326,7 +326,7 @@ class DecoderLayer(nn.Module):
 
 ```python        
 class Decoder(nn.Module):
-    def __init__(self, dec_voc_size, max_len, d_model, ffn_hidden, n_head, n_layers, drop_prob, device):
+    def __init__(self, dec_voc_size, max_len, d_model, ffn_hidden, num_head, num_layers, drop_prob, device):
         super().__init__()
         self.emb = TransformerEmbedding(d_model=d_model,
                                         drop_prob=drop_prob,
@@ -336,9 +336,9 @@ class Decoder(nn.Module):
 
         self.layers = nn.ModuleList([DecoderLayer(d_model=d_model,
                                                   ffn_hidden=ffn_hidden,
-                                                  n_head=n_head,
+                                                  num_head=num_head,
                                                   drop_prob=drop_prob)
-                                     for _ in range(n_layers)])
+                                     for _ in range(num_layers)])
 
         self.linear = nn.Linear(d_model, dec_voc_size)
 
@@ -372,8 +372,8 @@ I follow original paper's parameter settings. (below) <br>
 * batch_size = 128
 * max_len = 256
 * d_model = 512
-* n_layers = 6
-* n_heads = 8
+* num_layers = 6
+* num_heads = 8
 * ffn_hidden = 2048
 * drop_prob = 0.1
 * init_lr = 0.1
