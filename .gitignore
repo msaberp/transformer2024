@@ -9,3 +9,4 @@ result/
 .vscode/
 .hydra/
 outputs/
+runs/
