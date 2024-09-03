@@ -18,6 +18,7 @@ dataset:
   name: Multi30k
   path: .data/datasets/Multi30k
   batch_size: 32
+  drop_last: True
 
 model:
   name: transformer

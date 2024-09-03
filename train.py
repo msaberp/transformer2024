@@ -9,12 +9,14 @@ from torch.optim import Adam
 from omegaconf import DictConfig
 
 import torch
-from data import *
+from data import loader, get_data_iter
 from models.model.transformer import Transformer
 from util.bleu import idx_to_word, get_bleu
 from util.epoch_timer import epoch_time
 from util.logger import get_logger
+from torch.utils.tensorboard import SummaryWriter
 
+tensorboard_writer = SummaryWriter()
 logger = get_logger(__name__)
 
 
@@ -98,7 +100,12 @@ def evaluate_one_epoch(cfg, model, iterator, criterion):
             progress_bar.set_postfix({"loss": f"{loss.item():.4f}"})
 
             total_bleu = []
-            for j in range(cfg.dataset.batch_size):
+            if not cfg.dataset.drop_last:
+                batch_length = len(batch[0])
+            else:
+                batch_length = cfg.dataset.batch_size
+
+            for j in range(batch_length):
                 try:
                     trg_words = idx_to_word(batch[1][j], loader.target_vocab.vocab)
                     output_words = output[j].max(dim=1)[1]
@@ -119,6 +126,13 @@ def evaluate_one_epoch(cfg, model, iterator, criterion):
 
 
 def run(cfg: DictConfig):
+    src_pad_idx = loader.source_vocab['<pad>']
+    trg_pad_idx = loader.target_vocab['<pad>']
+    trg_sos_idx = loader.target_vocab['<sos>']
+    enc_voc_size = len(loader.target_vocab)
+    dec_voc_size = len(loader.target_vocab)
+    train_iter, val_iter, _ = get_data_iter(cfg)
+
     device = torch.device(cfg.runner.device)
     model = Transformer(
         src_pad_idx=src_pad_idx,
@@ -154,40 +168,27 @@ def run(cfg: DictConfig):
     criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 
     best_loss = float("inf")
-    train_losses, test_losses, bleus = [], [], []
 
     for epoch in range(cfg.runner.epoch):
-        start_time = time.time()
-
         train_loss = train_one_epoch(cfg, model, train_iter, optimizer, criterion)
-        valid_loss, bleu = evaluate_one_epoch(cfg, model, valid_iter, criterion)
-
-        end_time = time.time()
-        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
+        tensorboard_writer.add_scalar("Loss/train", train_loss, epoch)
+        val_loss, bleu = evaluate_one_epoch(cfg, model, val_iter, criterion)
+        tensorboard_writer.add_scalar("Loss/val", val_loss, epoch)
+        tensorboard_writer.add_scalar("BLEU/val", bleu, epoch)
 
         if epoch > cfg.runner.warmup:
-            scheduler.step(valid_loss)
+            scheduler.step(val_loss)
 
-        train_losses.append(train_loss)
-        test_losses.append(valid_loss)
-        bleus.append(bleu)
+        if val_loss < best_loss:
+            best_loss = val_loss
+            torch.save(model.state_dict(), f"saved/model-{val_loss:.3f}.pt")
 
-        if valid_loss < best_loss:
-            best_loss = valid_loss
-            torch.save(model.state_dict(), f"saved/model-{valid_loss:.3f}.pt")
-
-        save_results(train_losses, test_losses, bleus)
-
-        logger.info(f"Epoch: {epoch + 1} | Time: {epoch_mins}m {epoch_secs}s")
-        logger.info(
-            f"\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}"
-        )
-        logger.info(
-            f"\tVal Loss: {valid_loss:.3f} |  Val PPL: {math.exp(valid_loss):7.3f}"
-        )
-        logger.info(f"\tBLEU Score: {bleu:.3f}")
+        tensorboard_writer.add_scalar("PPL/train", math.exp(train_loss), epoch)
+        tensorboard_writer.add_scalar("PPL/val", math.exp(val_loss), epoch)
 
         if cfg.runner.dry_run:
             break
-
+    
+    tensorboard_writer.flush()
+    tensorboard_writer.close()
     logger.info("Training finished.")
