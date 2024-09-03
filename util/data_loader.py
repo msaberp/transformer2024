@@ -169,21 +169,30 @@ class TranslationDataLoader:
 
         return source_batch, target_batch
 
-    def make_train_iter(self, train_data, batch_size):
+    def make_train_iter(self, train_data, batch_size, drop_last=True):
         train_loader = DataLoader(
-            train_data, batch_size=batch_size, collate_fn=self.collate_batch
+            train_data,
+            batch_size=batch_size,
+            collate_fn=self.collate_batch,
+            drop_last=drop_last,
         )
         return train_loader
 
-    def make_val_iter(self, val_data, batch_size):
+    def make_val_iter(self, val_data, batch_size, drop_last=True):
         val_loader = DataLoader(
-            val_data, batch_size=batch_size, collate_fn=self.collate_batch
+            val_data,
+            batch_size=batch_size,
+            collate_fn=self.collate_batch,
+            drop_last=drop_last,
         )
         return val_loader
 
-    def make_test_iter(self, test_data, batch_size):
+    def make_test_iter(self, test_data, batch_size, drop_last=True):
         test_loader = DataLoader(
-            test_data, batch_size=batch_size, collate_fn=self.collate_batch
+            test_data,
+            batch_size=batch_size,
+            collate_fn=self.collate_batch,
+            drop_last=drop_last,
         )
         return test_loader
 
