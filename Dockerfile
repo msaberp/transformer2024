@@ -18,4 +18,4 @@ RUN python -m spacy download en_core_web_sm && \
 COPY . .
 
 # # Command to run your application
-CMD ["python", "main.py"]
+ENTRYPOINT ["python", "main.py"]

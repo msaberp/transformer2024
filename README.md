@@ -67,13 +67,13 @@ To build and run the model inside a Docker container:
 1. **Build the Docker image:**
 
     ```bash
-    docker build -t transformer-implementation .
+    docker build -t transformer-implementation --network=host .
     ```
 
 2. **Run the Docker container:**
 
     ```bash
-    docker run -it transformer-implementation
+    docker run --name transformer-implementation-container --rm --network=host transformer-implementation [runner.device=gpu] [dataset.batch_size=8]
     ```
 
 ### Monitoring with TensorBoard

@@ -181,6 +181,7 @@ def run(cfg: DictConfig):
 
         if val_loss < best_loss:
             best_loss = val_loss
+            os.makedirs("saved", exist_ok=True)
             torch.save(model.state_dict(), f"saved/model-{val_loss:.3f}.pt")
 
         tensorboard_writer.add_scalar("PPL/train", math.exp(train_loss), epoch)
