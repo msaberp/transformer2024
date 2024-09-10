@@ -10,3 +10,4 @@ result/
 .hydra/
 outputs/
 runs/
+.mypy_cache/

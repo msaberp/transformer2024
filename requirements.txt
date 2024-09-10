@@ -6,3 +6,4 @@ spacy==3.7.5
 portalocker==2.10.1
 hydra-core==1.3.2
 tensorboard==2.17.1
+captum==0.7.0
