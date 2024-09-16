@@ -3,6 +3,7 @@ runner:
   epoch: 1000
   warmup: 100
   dry_run: True
+  max_saved_models: 3
 
 optimizer:
   init_lr: 1e-5

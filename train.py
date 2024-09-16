@@ -3,6 +3,7 @@ import time
 import os
 from tqdm import tqdm
 import shutil
+import glob
 
 from torch import nn, optim
 from torch.optim import Adam
@@ -42,6 +43,7 @@ def save_results(train_losses, test_losses, bleus):
 def train_one_epoch(cfg, model, iterator, optimizer, criterion):
     model.train()
     epoch_loss = 0
+    device = torch.device(cfg.runner.device)
 
     # Get terminal width and set tqdm bar to 1/3rd of it
     terminal_width = shutil.get_terminal_size().columns
@@ -53,6 +55,8 @@ def train_one_epoch(cfg, model, iterator, optimizer, criterion):
 
     for i, batch in enumerate(progress_bar):
         src, trg = batch[0], batch[1]
+        src = src.to(device)
+        trg = trg.to(device)
         optimizer.zero_grad()
 
         output = model(src, trg[:, :-1])
@@ -79,6 +83,7 @@ def evaluate_one_epoch(cfg, model, iterator, criterion):
     model.eval()
     epoch_loss = 0
     batch_bleu = []
+    device = torch.device(cfg.runner.device)
 
     terminal_width = shutil.get_terminal_size().columns
     tqdm_width = terminal_width // 3
@@ -89,6 +94,9 @@ def evaluate_one_epoch(cfg, model, iterator, criterion):
     with torch.no_grad():
         for i, batch in enumerate(progress_bar):
             src, trg = batch[0], batch[1]
+            src = src.to(device)
+            trg = trg.to(device)
+            
             output = model(src, trg[:, :-1])
             output_reshape = output.contiguous().view(-1, output.shape[-1])
             trg = trg[:, 1:].contiguous().view(-1)
@@ -183,6 +191,14 @@ def run(cfg: DictConfig):
             best_loss = val_loss
             os.makedirs("saved", exist_ok=True)
             torch.save(model.state_dict(), f"saved/model-{val_loss:.3f}.pt")
+
+            saved_models = glob.glob(os.path.join("saved", "model-*.pt"))
+            saved_models = [(float(model.split('-')[-1].split('.pt')[0]), model) for model in saved_models]
+            saved_models = sorted(saved_models, key=lambda x: x[0])
+
+            if len(saved_models) > cfg.runner.max_saved_models:
+                for _, old_model in saved_models[cfg.runner.max_saved_models:]:
+                    os.remove(old_model)
 
         tensorboard_writer.add_scalar("PPL/train", math.exp(train_loss), epoch)
         tensorboard_writer.add_scalar("PPL/val", math.exp(val_loss), epoch)
